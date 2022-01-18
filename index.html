@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>고양이 가라사대</title>
+</head>
+<style>
+  body {
+    text-align: center;
+  }
+
+  .main-card button {
+    position: relative;
+    left: -45px;
+    bottom: 15px;
+  }
+
+  .favorites {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+</style>
+
+<body>
+  <div id="app"></div>
+
+  <!-- React를 실행. -->
+  <!-- 주의: 사이트를 배포할 때는 "development.js"를 "production.min.js"로 대체하세요. -->
+  <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+  <!-- 만든 React 컴포넌트를 실행. -->
+  <!-- <script src="like_button.js"></script> -->
+  <!-- 바벨 추가 -->
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+
+  <script type="text/babel">
+    const jsonLocalStorage = {
+      setItem: (key, value) => {
+        localStorage.setItem(key, JSON.stringify(value));
+      },
+      getItem: (key) => {
+        return JSON.parse(localStorage.getItem(key));
+      },
+    };
+
+    //타이틀 컴포넌트
+    const Title = (props) => {
+      return <h1>{props.children}</h1>
+    }
+
+
+    //입력폼 컴포넌트
+    const Form = ({ updateMainCat }) => {
+      //폼 검증
+      const includesHangul = (text) => /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/i.test(text);
+      //폼 
+      const [value, setValue] = React.useState('');
+      //에러메세지
+      const [errorMessage, setErrorMessage] = React.useState('');
+
+      function handleInputChange(event) {
+        const userValue = event.target.value;
+        setErrorMessage('');
+        if (includesHangul(userValue)) {
+          setErrorMessage("한글은 입력할 수 없습니다.");
+        }
+        setValue(userValue.toUpperCase());
+      }
+
+      function handleFormSubmit(event) {
+        event.preventDefault();
+        setErrorMessage('');
+        if (value === '') {
+          setErrorMessage("빈 값으로 만들 수 없습니다.")
+          return;
+        }
+        updateMainCat();
+      }
+
+      return (
+        <form onSubmit={handleFormSubmit}>
+          <input type="text" name="name" placeholder="영어 대사를 입력해주세요" onChange={handleInputChange} value={value} />
+          <button type="submit">생성</button>
+          <p style={{ color: "red" }}>{errorMessage}</p>
+        </form>
+      );
+    }
+
+
+    //즐겨찾기 한칸 컴포넌트
+    function CatItem(props) {
+      return (
+        <li>
+          <img src={props.img} style={{ width: "150px" }} />
+        </li>
+      )
+    }
+
+
+    //메인 사진 컴포넌트
+    const MainCard = ({ img, onHeartClick }) => {
+      function handleHeartMouseOver() {
+      }
+
+      return (
+        <div className="main-card">
+          <img src={img} alt="고양이" width="400" />
+          <button onClick={onHeartClick} onMouseOver={handleHeartMouseOver}>🤍</button>
+        </div>
+      );
+    };
+
+
+    //즐겨찾기 리스트 컴포넌트
+    function Favorites({ favorites }) {
+
+      return (
+        <ul className="favorites">
+          {favorites.map((cat) => (<CatItem img={cat} key={cat} />))}
+        </ul>
+      );
+    }
+
+
+    //최상위 컴포넌트
+    const App = () => {
+      const CAT1 = "https://cataas.com/cat/60b73094e04e18001194a309/says/react";
+      const CAT2 = "https://cataas.com//cat/5e9970351b7a400011744233/says/inflearn";
+      const CAT3 = "https://cataas.com/cat/595f280b557291a9750ebf65/says/JavaScript";
+
+      const [counter, setCounter] = React.useState(jsonLocalStorage.getItem('counter'));
+      const [mainCat, setMainCat] = React.useState(CAT1)
+      const [favorites, setFavorites] = React.useState(jsonLocalStorage.getItem('favorites') || [])
+
+
+      function updateMainCat() {
+        const nextCounter = counter + 1;
+        setCounter(nextCounter)
+        setMainCat(CAT2)
+        jsonLocalStorage.setItem('counter', nextCounter)
+      }
+
+      function handleHeartClick() {
+        const nextFavorites = [...favorites, mainCat];
+        setFavorites(nextFavorites);
+        jsonLocalStorage.setItem('favorites', nextFavorites)
+      }
+
+      return (
+        <div>
+          <Title>{counter}번재 고양이 가라사대</Title>
+          <Form updateMainCat={updateMainCat} />
+          <MainCard img={mainCat} onHeartClick={handleHeartClick} />
+          <Favorites favorites={favorites} />
+        </div>
+      )
+    }
+
+    const 그릴위치 = document.querySelector('#app')
+
+    //그리라는 명령 - catItem을 그릴위치에
+    ReactDOM.render(<App />, 그릴위치)
+
+  </script>
+</body>
+
+</html>
